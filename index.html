@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unlimited Clipping: long streams in, captioned 9:16 clips out</title>
+<meta name="description" content="Free, local tool that turns long YouTube, Twitch or Kick videos into captioned vertical 9:16 clips. Guide by GodinopGaming.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Hind:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E8EDF6; --ink:#0E1A3A; --mute:#46526F; --line:#C3CCDF;
+  --cut:#E8381A; --cap:#FFD93B; --deep:#0E1A3A; --paper:#F7F9FD; --mint:#1FB98C;
+  --head:"Bricolage Grotesque","Segoe UI","Noto Sans",system-ui,sans-serif;
+  --body:"Hind","Noto Sans Devanagari","Nirmala UI","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--cut);outline-offset:3px;border-radius:4px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+h1,h2,h3{font-family:var(--head);margin:0;line-height:1.02;letter-spacing:-.02em}
+.hi{color:var(--mute)}
+
+/* ---------- top bar ---------- */
+.top{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+.logo{font:800 20px/1 var(--head);letter-spacing:-.02em;text-decoration:none}
+.logo i{display:inline-block;width:11px;height:20px;background:var(--cut);margin-right:8px;vertical-align:-3px;border-radius:2px;transform:skewX(-10deg)}
+.top a.ig{font-size:15px;text-decoration:none;border-bottom:2px solid var(--ink)}
+
+/* ---------- hero ---------- */
+.hero{padding:34px 0 28px}
+.hero h1{font-size:clamp(46px,8.4vw,104px);font-weight:800;max-width:11.5em}
+.hero .sub{max-width:36em;margin:22px 0 0;font-size:19px}
+.hero .sub2{margin:6px 0 0;max-width:36em}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.btn{font:600 16px/1 var(--body);border:2px solid var(--ink);background:transparent;color:var(--ink);padding:14px 22px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.main{background:var(--cut);border-color:var(--cut);color:#fff}
+.btn:hover{transform:translateY(-1px)}
+
+/* ---------- timeline demo ---------- */
+.bay{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:34px;align-items:start;margin:34px 0 8px}
+.tl-head{display:flex;justify-content:space-between;font:600 14px/1 var(--head);color:var(--mute);margin-bottom:10px}
+.timeline{position:relative;height:150px;background:var(--paper);border:2px solid var(--ink);border-radius:10px;overflow:hidden}
+.bars{position:absolute;inset:14px 10px;display:flex;align-items:center;gap:2px}
+.bars span{flex:1;background:#9AA8C6;border-radius:2px;min-width:2px}
+.bars span.hot{background:var(--ink)}
+.clip{position:absolute;top:0;bottom:0;border:0;padding:0;background:rgba(232,56,26,.12);border-left:3px solid var(--cut);border-right:3px solid var(--cut);cursor:pointer;color:var(--cut);font:800 13px/1 var(--head)}
+.clip span{position:absolute;left:6px;top:8px;background:var(--cut);color:#fff;padding:3px 6px;border-radius:4px}
+.clip[aria-pressed="true"]{background:rgba(232,56,26,.28)}
+.ruler{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin-top:6px}
+.picked{margin-top:18px;min-height:96px}
+.picked h3{font-size:26px}
+.picked p{margin:6px 0 0}
+.hint{font-size:14px;color:var(--mute);margin-top:12px}
+
+.phone{width:100%;max-width:270px;aspect-ratio:9/16;background:#05070f;border:3px solid var(--ink);border-radius:26px;position:relative;overflow:hidden;justify-self:center;box-shadow:0 0 0 6px var(--bg),0 0 0 8px var(--ink)}
+.face{position:absolute;left:0;right:0;top:0;height:38%;background:linear-gradient(160deg,#2E3F78,#16224A)}
+.face:after{content:"";position:absolute;left:50%;top:50%;width:62px;height:62px;border-radius:50%;background:#E5B98F;transform:translate(-50%,-52%);box-shadow:0 38px 0 -6px #26335F}
+.game{position:absolute;left:0;right:0;bottom:0;height:62%;background:linear-gradient(180deg,#143B33,#0B1E1B 60%,#35120C)}
+.game i{position:absolute;display:block;border-radius:3px}
+.game i:nth-child(1){left:14%;bottom:20%;width:34px;height:70px;background:#1FB98C}
+.game i:nth-child(2){right:16%;bottom:34%;width:50px;height:26px;background:#E8381A}
+.game i:nth-child(3){left:42%;bottom:48%;width:18px;height:18px;background:#FFD93B;border-radius:50%}
+.caption{position:absolute;left:8%;right:8%;top:47%;text-align:center;font:800 26px/1.15 var(--head);color:#fff;text-transform:uppercase;-webkit-text-stroke:0;text-shadow:0 2px 0 #000,0 0 12px rgba(0,0,0,.6);min-height:2.3em}
+.caption b{color:var(--cap);font-weight:800}
+.badge{position:absolute;left:10px;top:10px;font:600 11px/1 var(--body);background:rgba(255,255,255,.14);color:#fff;padding:5px 7px;border-radius:5px}
+
+/* ---------- bands ---------- */
+.band{padding:78px 0}
+.band.deep{background:var(--deep);color:#fff}
+.band.deep .hi{color:#B9C3DD}
+.band h2{font-size:clamp(34px,5vw,56px);font-weight:800;max-width:14em}
+.lede{max-width:38em;margin:14px 0 0}
+
+/* sequence rail */
+.rail{list-style:none;margin:36px 0 0;padding:0;position:relative;max-width:760px}
+.rail:before{content:"";position:absolute;left:19px;top:8px;bottom:8px;width:3px;background:var(--cut)}
+.rail li{position:relative;padding:0 0 30px 62px}
+.rail li:last-child{padding-bottom:0}
+.rail .n{position:absolute;left:0;top:-3px;width:40px;height:40px;border-radius:50%;background:var(--bg);border:3px solid var(--cut);display:grid;place-items:center;font:800 17px/1 var(--head)}
+.rail b{display:block;font:600 22px/1.2 var(--head)}
+.rail span{display:block;margin-top:3px}
+
+/* prompt */
+.promptbox{margin-top:30px;border:2px solid #fff;border-radius:10px;background:#0A1230;position:relative}
+.promptbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-bottom:2px solid #2A3A6E}
+.promptbar span{font-size:14px;color:#B9C3DD}
+.promptbox pre{margin:0;padding:16px;max-height:380px;overflow:auto;white-space:pre-wrap;word-break:break-word;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#E6ECFF}
+.safe{margin-top:18px;max-width:40em}
+.safe b{color:var(--cap)}
+
+/* layouts */
+.layouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:22px;margin-top:34px}
+.lay figure{margin:0}
+.mini{width:72px;aspect-ratio:9/16;background:#05070f;border:2px solid var(--ink);border-radius:9px;position:relative;overflow:hidden}
+.mini i{position:absolute;left:0;right:0;display:block}
+.lay b{display:block;margin-top:10px;font:600 18px/1.2 var(--head)}
+.lay span{font-size:15px;color:var(--mute)}
+.m1 .a{top:0;height:36%;background:#4D8DFF}.m1 .b{bottom:0;height:64%;background:var(--cut)}
+.m2 .a{inset:0;background:#31407A;filter:blur(1px)}.m2 .b{top:33%;height:34%;background:var(--cut)}
+.m3 .a{inset:0;background:linear-gradient(180deg,#B04BA0,#E8381A)}
+.m4 .a{inset:0;background:var(--mint)}
+
+.sets{margin-top:44px;border-top:2px solid var(--ink)}
+.sets div{display:grid;grid-template-columns:200px 1fr;gap:6px 26px;padding:14px 0;border-bottom:1px solid var(--line)}
+.sets dt{font:600 18px/1.3 var(--head)}
+.sets dd{margin:0}
+.sets dd small{display:block;color:var(--mute);font-size:15px}
+
+/* good to know */
+.know{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:34px}
+.know h3{font-size:26px;margin-bottom:10px}
+.know ul{margin:0;padding-left:20px}
+.know li{margin-bottom:10px}
+.fix{width:100%;border-collapse:collapse}
+.fix th,.fix td{text-align:left;vertical-align:top;padding:11px 10px 11px 0;border-bottom:1px solid var(--line)}
+.fix th{font:600 16px/1.3 var(--head);width:34%}
+.fix code{background:#fff;padding:1px 6px;border-radius:4px;font-size:14px}
+
+/* footer */
+footer{padding:54px 0 64px}
+footer .big{font:800 clamp(30px,5vw,54px)/1.05 var(--head);letter-spacing:-.02em;max-width:14em}
+footer .links{display:flex;flex-wrap:wrap;gap:22px;margin-top:20px;font-weight:500}
+footer .links a{text-underline-offset:4px}
+footer p.cr{margin:34px 0 0;max-width:46em;color:var(--mute);font-size:15px}
+
+@media (max-width:820px){
+  .bay{grid-template-columns:1fr}
+  .phone{order:-1}
+  .know{grid-template-columns:1fr;gap:34px}
+  .sets div{grid-template-columns:1fr}
+  .band{padding:58px 0}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn:hover{transform:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <a class="logo" href="#top"><i></i>Unlimited Clipping</a>
+    <a class="ig" href="https://www.instagram.com/godinopgaming">Instagram @godinopgaming</a>
+  </div>
+
+  <header class="hero" id="top">
+    <h1>Lambi stream daalo, chhoti clips nikalo.</h1>
+    <p class="sub">Paste a YouTube, Twitch or Kick link. Unlimited Clipping finds the loudest moments and cuts captioned 9:16 clips for Reels, Shorts and TikTok. It runs on your own computer. Free, no account.</p>
+    <p class="sub2 hi">लिंक पेस्ट करो, कुछ मिनट में कैप्शन वाली वर्टिकल क्लिप तैयार।</p>
+    <div class="actions">
+      <button class="btn main" id="copyTop" type="button">Copy setup prompt</button>
+      <a class="btn" href="https://github.com/godinopgaming-png/unlimited-clipping">Star on GitHub</a>
+    </div>
+
+    <div class="bay">
+      <div>
+        <div class="tl-head"><span>One stream, 85 minutes</span><span>Tap a cut to preview it</span></div>
+        <div class="timeline" id="timeline" aria-label="Stream timeline with three cut clips">
+          <div class="bars" id="bars" aria-hidden="true"></div>
+        </div>
+        <div class="ruler"><span>0:00</span><span>21:15</span><span>42:30</span><span>1:03:45</span><span>1:25:00</span></div>
+        <div class="picked" id="picked" aria-live="polite"></div>
+        <p class="hint">Demo only: the picture shows how clips are cut. Your real clips come from your own video.</p>
+      </div>
+      <div class="phone" aria-label="Preview of a 9:16 clip with Hinglish captions">
+        <div class="face"></div>
+        <div class="game"><i></i><i></i><i></i></div>
+        <div class="badge" id="badge">Clip 1</div>
+        <div class="caption" id="caption"></div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<section class="band" id="how">
+  <div class="wrap">
+    <h2>Four steps from link to clip</h2>
+    <p class="lede">Only the best parts of the video are downloaded, so an 85 minute stream gives 3 clips in about 2 minutes.<br><span class="hi">पूरा वीडियो नहीं, सिर्फ़ चुने हुए हिस्से आते हैं।</span></p>
+    <ol class="rail">
+      <li><span class="n">1</span><b>Paste a link or upload an MP4</b><span class="hi">वीडियो लिंक पेस्ट करो या Upload video दबाओ।</span></li>
+      <li><span class="n">2</span><b>Pick where the facecam is</b><span>Choose a corner, or draw the Facecam area and Gameplay area boxes yourself.<br><span class="hi">Facecam कहाँ है चुनो, या बॉक्स खुद बनाओ।</span></span></li>
+      <li><span class="n">3</span><b>Press Make clips</b><span class="hi">Make clips दबाओ। क्लिप एक-एक करके आती हैं।</span></li>
+      <li><span class="n">4</span><b>Preview, then Download MP4</b><span>Every clip also stays in My clips.<br><span class="hi">सारी क्लिप My clips में भी रहती हैं।</span></span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="band deep" id="setup">
+  <div class="wrap">
+    <h2>Setup is one paste into an AI agent</h2>
+    <p class="lede">Open an agent that can run commands on your computer: Claude Code, OpenAI Codex, Google Antigravity or Cursor. Paste the prompt, press Enter and say yes when it asks. It checks your computer, installs what is missing, starts the app and opens it in Chrome.<br><span class="hi">AI agent में prompt पेस्ट करो, Enter दबाओ, जब पूछे तो yes बोलो। बाकी सब वह खुद करेगा।</span></p>
+    <div class="promptbox">
+      <div class="promptbar"><span>Setup prompt, copy all of it</span><button class="btn main" id="copy" type="button">Copy setup prompt</button></div>
+      <pre id="prompt">You are my setup assistant. I am a complete beginner and not technical. Talk to me in simple Hinglish (Hindi written in Roman letters, short sentences, friendly tone). Use English only for button names, commands and file names. Never use jargon without explaining it in one simple line.
+
+GOAL
+Install Unlimited Clipping (https://github.com/godinopgaming-png/unlimited-clipping) on THIS computer, check that it works, and open it in my Chrome browser. Unlimited Clipping is a free, open-source tool that turns a long YouTube / Twitch / Kick video (or an MP4) into captioned vertical 9:16 clips for Reels, Shorts and TikTok. It runs only on my computer at http://127.0.0.1:8770. It needs no account and no API key.
+
+HOW YOU MUST WORK
+- Run every command yourself in a terminal (you need an agent that can run shell commands). Do not ask me to type commands. Ask me only when a step truly needs my hands (an installer window, an admin prompt) or when a decision is mine.
+- Before each step, tell me in one short Hinglish line what you are about to do and why. After each step, tell me if it worked.
+- Never ask for my passwords or API keys (none are needed). Never turn off antivirus or firewall. Never change system or security settings. Do not use administrator rights unless an installer truly needs them, and tell me first.
+- Before any download bigger than 500 MB, tell me the name, the size and the source, and wait for my yes. The speech model (about 1.6 GB) and the optional Ollama model (about 2 GB) are big.
+- If a step fails: show the exact error in one line, try one sensible fix, and if it still fails stop and explain simply what I should do. Do not hide errors.
+
+STEP 0. CHECK MY COMPUTER (do this first)
+Find out and tell me in 3-4 short lines: operating system and version, free disk space (need at least 10 GB), whether I have an NVIDIA GPU (nvidia-smi) and how much video memory, and which of these are already installed with versions: Python 3.10 or newer, FFmpeg and ffprobe, Git, Ollama, Google Chrome. If the disk is too small or the system is unsupported, stop and tell me.
+
+STEP 1. INSTALL ONLY WHAT IS MISSING
+- Python 3.10+ (Windows: winget install Python.Python.3.12, with PATH; macOS: brew install python; Linux: apt install python3 python3-venv python3-pip).
+- FFmpeg with ffprobe (Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg; Linux: apt install ffmpeg). Check with ffmpeg -version and ffprobe -version.
+- Git (Windows: winget install Git.Git; macOS: xcode-select --install or brew install git; Linux: apt install git).
+If a new terminal is needed so PATH updates, tell me, then continue in a fresh shell.
+
+STEP 2. GET THE APP
+  git clone https://github.com/godinopgaming-png/unlimited-clipping
+  cd unlimited-clipping
+
+STEP 3. CREATE THE PRIVATE ENVIRONMENT AND INSTALL PACKAGES
+Windows:  python -m venv .venv   then   .venv\Scripts\python.exe -m pip install --upgrade pip   then   .venv\Scripts\python.exe -m pip install -r requirements.txt
+Linux/macOS:  python3 -m venv .venv   then   .venv/bin/pip install --upgrade pip   then   .venv/bin/pip install -r requirements.txt
+Verify with the venv python:  python -c &quot;import fastapi, uvicorn, yt_dlp, numpy, cv2, faster_whisper, PIL; print(&#x27;imports ok&#x27;)&quot;
+
+STEP 4. OPTIONAL BUT RECOMMENDED: LOCAL AI FOR TITLES, HOOKS AND BETTER MOMENT PICKING
+Ask me ONE question: &quot;AI titles aur better clip picking ke liye Ollama aur llama3.2:3b (about 2 GB) chahiye. Install karun?&quot; If I say yes: install Ollama from https://ollama.com (Windows: winget install Ollama.Ollama; macOS: brew install ollama; Linux: curl -fsSL https://ollama.com/install.sh | sh), make sure it is running (http://127.0.0.1:11434), then run: ollama pull llama3.2:3b. Verify with curl http://127.0.0.1:11434/api/tags (llama3.2:3b must be listed). If I say no, skip it: the app still works and picks clips by sound and motion only.
+
+STEP 5. OPTIONAL: NVIDIA GPU SPEED-UP (only if STEP 0 found an NVIDIA GPU)
+Install the GPU libraries into the same environment: pip install nvidia-cublas-cu12 &quot;nvidia-cudnn-cu12==9.*&quot;. This only speeds up speech recognition for videos without YouTube captions (Twitch VODs, uploaded files). If it fails, ignore it: the app falls back to the CPU by itself (set NEONCLIPPING_CPU=1 to force CPU).
+
+STEP 6. SPEECH MODEL (downloads by itself)
+The first time clips are rendered with &quot;Accurate&quot; captions, the app downloads the Whisper large-v3-turbo model (about 1.6 GB). Tell me this now and get my yes. The &quot;Best Hindi&quot; setting uses Whisper large-v3 (about 3 GB, much more correct Hindi but slow): do not download it unless I choose it. I can also pick &quot;Fast&quot; captions to avoid the download.
+
+STEP 7. START THE APP AND OPEN IT IN CHROME
+Start it in the background so the terminal stays free: Windows: powershell -ExecutionPolicy Bypass -File run.ps1 (or .venv\Scripts\python.exe app.py); Linux/macOS: ./run.sh (or .venv/bin/python app.py). If port 8770 is busy, set NEONCLIPPING_PORT=8771 and use that port everywhere below. Check that http://127.0.0.1:8770/healthz answers {&quot;ok&quot;:true,...}. Then OPEN http://127.0.0.1:8770 in my Google Chrome. If you cannot open the browser yourself, give me one clear line: &quot;Is link ko Chrome mein kholo: http://127.0.0.1:8770&quot;.
+
+STEP 8. QUICK TEST (ask me first, it downloads a few MB)
+Use the public 90-second YouTube video https://www.youtube.com/watch?v=QdBZY2fkU-0. Call POST http://127.0.0.1:8770/make with JSON {&quot;url&quot;:&quot;https://www.youtube.com/watch?v=QdBZY2fkU-0&quot;,&quot;count&quot;:2,&quot;min_len&quot;:15,&quot;max_len&quot;:30,&quot;layout&quot;:&quot;blur&quot;,&quot;mode&quot;:&quot;fast&quot;}. It returns {&quot;job&quot;:&quot;...&quot;}. Poll GET /make/&lt;job&gt; every 3 seconds until status is &quot;done&quot; (about 30 seconds). Check that 2 clips exist and play: ffprobe on the clip files in the data folder must show 1080x1920. Tell me the result in one line.
+
+STEP 9. EXPLAIN EVERYTHING TO ME IN SIMPLE HINDI/HINGLISH (the most important step)
+Explain in short bullets, as if I know nothing:
+1. Kya-kya install hua aur kahan hai (folder path), aur kya optional tha jo maine chuna ya nahi chuna.
+2. Agli baar app kaise chalana hai: run.ps1 (Windows) ya ./run.sh (Mac/Linux), phir Chrome mein http://127.0.0.1:8770 kholna. App band karne ke liye terminal band karo.
+3. Clips kaise banani hain, 4 steps: (1) YouTube/Twitch/Kick link paste karo ya MP4 Upload karo, (2) Facecam position chuno jahan streamer ka webcam hai (top-left, top-right, bottom-left, bottom-right, bottom-centre, ya none), ya step 03 mein &quot;Facecam area&quot; aur &quot;Gameplay area&quot; ke box khud draw karo, (3) &quot;Make clips&quot; dabao, (4) clips ek-ek karke aati hain: dekho aur &quot;Download MP4&quot; dabao. Sab clips &quot;My clips&quot; mein bhi rehti hain.
+4. Settings ka matlab: Mode (Fast = lagbhag 2 minute, Deep = dheema par zyada smart), Clips (kitni chahiye), Min/Max length (jaise 30 se 60 ya 80 second), Caption style (GTA Neon, Hormozi, MrBeast, Impact, Clean), Caption language (Auto: hindi bolne wali video ke captions Hinglish mein aate hain), Caption accuracy (Accurate default, Fast, Best Hindi).
+5. Kaise kaam karta hai, bahut aasaan shabdon mein: lambi video ka pehle sirf audio aata hai, usse sabse josheele moments dhundhta hai, phir sirf unhi hisson ki video laakar captions ke saath 9:16 clip banata hai. Isliye lambi YouTube video bhi lagbhag 2 minute mein.
+6. Clips kahan save hoti hain (app folder ke andar data folder).
+7. Honest limits: 10 minute se lambi YouTube video sabse fast hoti hai; Twitch ya MP4 dheemi hoti hai kyunki awaaz pehchanni padti hai; AI ka chunav 100% perfect nahi hota, isliye clip post karne se pehle dekh lo; Hindi captions mein kabhi galat shabd aa sakte hain (Best Hindi chuno ya step 04 mein shabd khud theek karo).
+8. Problem aaye to: wahi prompt dobara is agent ko do aur error bata do.
+
+FINAL REPORT
+Tell me honestly: operating system, what was already installed, what you installed (with versions), the link where the app is running, the quick-test result, what you skipped, and what you could not check. If Unlimited Clipping saved me time, remind me once (only once) that I can star https://github.com/godinopgaming-png/unlimited-clipping on GitHub and follow @godinopgaming on Instagram, so the tool keeps getting better. Also tell me once that this project is based on NeonClipping, originally created by Ajay K Meena (@iamajmeena, https://github.com/iamajmeena/neonclipping) and I can star the original project too.</pre>
+    </div>
+    <p class="safe"><b>Safe:</b> no passwords, no API keys and no security settings touched. It asks before any big download. The same text is in the repo as <code>docs/GODINOPGAMING-AGENT-SETUP-PROMPT.txt</code>.</p>
+  </div>
+</section>
+
+<section class="band" id="settings">
+  <div class="wrap">
+    <h2>Pick a layout, then tune the settings</h2>
+    <div class="layouts">
+      <div class="lay"><figure><div class="mini m1"><i class="a"></i><i class="b"></i></div><b>Face + gameplay</b><span>Face on top, game below.</span></figure></div>
+      <div class="lay"><figure><div class="mini m2"><i class="a"></i><i class="b"></i></div><b>Blurred fill</b><span>Wide frame over a blurred copy.</span></figure></div>
+      <div class="lay"><figure><div class="mini m3"><i class="a"></i></div><b>Fill screen</b><span>Bold centre crop.</span></figure></div>
+      <div class="lay"><figure><div class="mini m4"><i class="a"></i></div><b>Gameplay only</b><span>Just the area you select.</span></figure></div>
+    </div>
+    <dl class="sets">
+      <div><dt>Mode</dt><dd>Fast takes about 2 minutes. Deep is slower but smarter.<small>Fast लगभग 2 मिनट, Deep धीमा पर ज़्यादा समझदार।</small></dd></div>
+      <div><dt>Clips</dt><dd>How many clips you want, from 1 to 12.</dd></div>
+      <div><dt>Min and max length</dt><dd>For example 30 and 60 seconds, or 30 and 80.</dd></div>
+      <div><dt>Facecam position</dt><dd>Top-left, top-right, bottom-left, bottom-right, bottom-centre or none.</dd></div>
+      <div><dt>Caption style</dt><dd>GTA Neon, Hormozi, MrBeast, Impact or Clean.</dd></div>
+      <div><dt>Caption language</dt><dd>Auto turns Hindi speech into Hinglish. You can also force Hinglish, हिंदी or English.</dd></div>
+      <div><dt>Caption accuracy</dt><dd>Accurate is the default. Fast skips the big speech download. Best Hindi is the most correct and the slowest.<small>Best Hindi सबसे सही हिंदी देता है, पर धीमा है।</small></dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="band" id="know" style="padding-top:0">
+  <div class="wrap">
+    <h2>Good to know</h2>
+    <div class="know">
+      <div>
+        <h3>What works best</h3>
+        <ul>
+          <li>Pick videos where the creator talks and reacts: streams, podcasts, interviews.</li>
+          <li>YouTube links are the fastest. Twitch and MP4 are slower because speech is recognised on your PC.</li>
+          <li>The AI choice is never 100% perfect, so watch every clip before you post it.</li>
+          <li>Hindi captions can have a wrong word now and then. Use Best Hindi or fix the words yourself in step 04 of the app.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>If something breaks</h3>
+        <table class="fix">
+          <tr><th>No AI titles</th><td>Ollama is off. Start it, then run <code>ollama pull llama3.2:3b</code>.</td></tr>
+          <tr><th>Wrong caption words</th><td>Set Caption accuracy to Best Hindi.</td></tr>
+          <tr><th>Link fails</th><td>Use the original MP4 with Upload video.</td></tr>
+          <tr><th>Cannot set it up</th><td>Paste the prompt into an AI agent again and tell it the error.</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="band deep" style="padding:70px 0 64px">
+  <div class="wrap">
+    <div class="big" style="color:#fff">Liked it? A star on GitHub keeps it growing.</div>
+    <div class="links">
+      <a href="https://github.com/godinopgaming-png/unlimited-clipping">github.com/godinopgaming-png/unlimited-clipping</a>
+      <a href="https://www.instagram.com/godinopgaming">Instagram @godinopgaming</a>
+    </div>
+    <p class="cr" style="color:#B9C3DD">Made by GodinopGaming. Unlimited Clipping is based on NeonClipping, an open-source project originally created by Ajay K Meena (<a href="https://github.com/iamajmeena/neonclipping">github.com/iamajmeena/neonclipping</a>, Instagram @iamajmeena).</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* waveform: deterministic pseudo-random so it looks the same every load */
+  var clips = [
+    { start: 17, end: 23, label: 'Clip 1', time: '14:30 to 19:35', title: 'The clutch nobody saw coming',
+      words: ['bhai ye', 'kya hua', 'seedha headshot', 'maza aa gaya'], hot: 3 },
+    { start: 46, end: 52, label: 'Clip 2', time: '39:10 to 44:15', title: 'Squad loses it after the last second win',
+      words: ['arre ruk', 'ruk ruk', 'ye toh', 'jeet gaye'], hot: 4 },
+    { start: 74, end: 80, label: 'Clip 3', time: '1:03:00 to 1:08:05', title: 'Rage quit, then the comeback',
+      words: ['bas ab', 'nahi hota', 'chal ek', 'round aur'], hot: 5 }
+  ];
+  var N = 110, seed = 7;
+  function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  var bars = document.getElementById('bars'), tl = document.getElementById('timeline');
+  for (var i = 0; i < N; i++) {
+    var pct = i / N * 100, h = 14 + rnd() * 30, hot = false;
+    clips.forEach(function (c) { if (pct >= c.start && pct <= c.end) { h = 46 + rnd() * 50; hot = true; } });
+    var s = document.createElement('span');
+    s.style.height = h + '%';
+    if (hot) s.className = 'hot';
+    bars.appendChild(s);
+  }
+
+  var cap = document.getElementById('caption'), badge = document.getElementById('badge'),
+      picked = document.getElementById('picked'), buttons = [], current = 0, timer = null, wi = 0;
+
+  clips.forEach(function (c, idx) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'clip';
+    b.style.left = c.start + '%'; b.style.width = (c.end - c.start) + '%';
+    b.setAttribute('aria-pressed', 'false');
+    b.setAttribute('aria-label', c.label + ', ' + c.time + '. ' + c.title);
+    b.innerHTML = '<span>' + (idx + 1) + '</span>';
+    b.addEventListener('click', function () { select(idx); });
+    tl.appendChild(b); buttons.push(b);
+  });
+
+  function esc(t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+  function showWord() {
+    var c = clips[current], line = c.words[Math.floor(wi / 2) % c.words.length].split(' ');
+    var which = wi % 2 === 0 ? 0 : line.length - 1;
+    cap.innerHTML = line.map(function (w, k) {
+      return k === which ? '<b>' + esc(w) + '</b>' : esc(w);
+    }).join(' ');
+  }
+
+  function select(idx) {
+    current = idx; wi = 0;
+    buttons.forEach(function (b, k) { b.setAttribute('aria-pressed', k === idx ? 'true' : 'false'); });
+    var c = clips[idx];
+    badge.textContent = c.label;
+    picked.innerHTML = '<h3>' + esc(c.title) + '</h3><p class="hi">' + esc(c.label) + ', ' + esc(c.time) + '. Cut to 9:16 with Hinglish captions.</p>';
+    showWord();
+    if (timer) clearInterval(timer);
+    if (!reduce) timer = setInterval(function () { wi++; showWord(); }, 520);
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { clearInterval(timer); timer = null; }
+    else if (!reduce && !timer) timer = setInterval(function () { wi++; showWord(); }, 520);
+  });
+  select(0);
+
+  /* copy buttons */
+  function copyPrompt(btn) {
+    var text = document.getElementById('prompt').innerText, old = btn.textContent;
+    function done() { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = old; }, 2000); }
+    function fallback() {
+      var r = document.createRange(); r.selectNodeContents(document.getElementById('prompt'));
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      try { document.execCommand('copy'); done(); } catch (e) { btn.textContent = 'Select the text and copy'; }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+    else fallback();
+  }
+  ['copy', 'copyTop'].forEach(function (id) {
+    document.getElementById(id).addEventListener('click', function () { copyPrompt(this); });
+  });
+})();
+</script>
+</body>
+</html>
